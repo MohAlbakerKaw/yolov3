@@ -1,3 +1,5 @@
+#detect.py
+
 import argparse
 import time
 from pathlib import Path
@@ -110,9 +112,53 @@ def detect(opt):
                     if save_img or opt.save_crop or view_img:  # Add bbox to image
                         c = int(cls)  # integer class
                         label = None if opt.hide_labels else (names[c] if opt.hide_conf else f'{names[c]} {conf:.2f}')
-                        plot_one_box(xyxy, im0, label=label, color=colors(c, True), line_thickness=opt.line_thickness)
+                        #plot_one_box(xyxy, im0, label=label, color=colors(c, True), line_thickness=opt.line_thickness)
                         if opt.save_crop:
                             save_one_box(xyxy, imc, file=save_dir / 'crops' / names[c] / f'{p.stem}.jpg', BGR=True)
+
+####################################>>>>>>>>>> START of modified code <<<<<<<<<<<########################## 
+                        #############>> commented this line to not to print bounding box on image
+                        # plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=3)
+                        x1 = int(xyxy[0].item())
+                        y1 = int(xyxy[1].item())
+                        x2 = int(xyxy[2].item())
+                        y2 = int(xyxy[3].item())
+
+                        area_bb = int(abs(x2-x1))*int(abs(y2-y1))
+                        area_im = int(im0.shape[0])*int(im0.shape[1])
+
+                        if area_bb > area_im/16:
+                          xc = int((x1+x2)/2)
+                          yc = int((y1+y2)/2)
+
+                          print('center is ', xc, yc)
+                          cv2.circle(im0, center=(xc, yc), color=(0,0,255), radius=3, thickness=2)
+
+                          if 0 < xc < int(im0.shape[1]/5):
+                            print('danger pose: 0')
+                          elif int(im0.shape[1]/5) < xc < int(2*im0.shape[1]/5):
+                            print('danger pose: 1')
+                          elif int(2*im0.shape[1]/5) < xc < int(3*im0.shape[1]/5):
+                            print('danger pose: 2')
+                          elif int(3*im0.shape[1]/5) < xc < int(4*im0.shape[1]/5):
+                            print('danger pose: 3')
+                          elif int(4*im0.shape[1]/5) < xc < int(5*im0.shape[1]/5):
+                            print('danger pose: 4')
+                          else:
+                            print('danger pose error!')
+
+                        
+                          confidence_score = conf
+                          class_index = cls
+                          object_name = names[int(cls)]
+
+                        #print('bounding box is ', x1, y1, x2, y2)
+                          print('class index is ', class_index)
+                          print('detected object name is ', object_name)
+                        #original_img = im0
+                        #cropped_img = im0[y1:y2, x1:x2]
+                        #cv2.imwrite('test.png',cropped_img) ### >>>>>> to retain all cropped picture give different name for each pictures, else it will overwrite and only last image will be saved.     
+####################################>>>>>>>>>> END of modified code <<<<<<<<<<<##########################  
 
             # Print time (inference + NMS)
             print(f'{s}Done. ({t2 - t1:.3f}s)')
@@ -181,5 +227,4 @@ if __name__ == '__main__':
             detect(opt=opt)
             strip_optimizer(opt.weights)
     else:
-        
         detect(opt=opt)
