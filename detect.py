@@ -181,4 +181,5 @@ if __name__ == '__main__':
             detect(opt=opt)
             strip_optimizer(opt.weights)
     else:
+        
         detect(opt=opt)
